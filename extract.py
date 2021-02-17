@@ -10,6 +10,10 @@ import time
 import os
 
 
+SEARCH_STATE = 'FLORIDA'
+SEARCH_YEAR = 2000
+
+
 class element_has_options(object):
     """
     Checks if the HTML element (probably be a form) has multiple elements with <option> tag.
@@ -31,7 +35,13 @@ class element_has_options(object):
 driver = webdriver.Chrome()
 driver.get('https://msc.fema.gov/portal/advanceSearch')
 
-outp = csv.writer(open('file_to_date.csv','a', newline=''), delimiter=',')
+# Add to the file or write to a new one
+if os.path.isfile('file_to_date.csv'):
+    print("Appending to previous output file")
+    outp = csv.writer(open('file_to_date.csv','a', newline=''), delimiter=',')
+else:
+    print("Creating new output file")
+    outp = csv.writer(open('file_to_date.csv','w', newline=''), delimiter=',')
 
 try:
     # Wait until website is loaded
@@ -41,7 +51,7 @@ try:
 
     # Select Florida from states dropdown
     select_state = Select(driver.find_element_by_id('selstate'))
-    select_state.select_by_visible_text('FLORIDA')
+    select_state.select_by_visible_text(SEARCH_STATE)
 
     # Wait until county dropdown is loaded
     _ = WebDriverWait(driver, 120).until(
@@ -62,7 +72,7 @@ try:
             outp_path = 'output/' + county_name_lower
             if os.path.isdir(outp_path):
                 continue
-            os.makedirs(outp_path, exist_ok=True)
+            os.makedirs(outp_path)
 
             # Select ALL JURISDICTIONS community
             select_community = Select(driver.find_element_by_id('selcommunity'))
@@ -116,7 +126,7 @@ try:
                         # print(file_id, file_date, file_link)
 
                         # Download and write to csv
-                        if int(file_date[-4:]) >= 2000:
+                        if int(file_date[-4:]) >= SEARCH_YEAR:
                             urlretrieve(act_link, outp_path + '/' + file_id + '.pdf')
                             outp.writerow([file_id, file_date])
 
@@ -173,7 +183,7 @@ try:
                         # print(file_id, file_date, file_link)
 
                         # Download and write to csv
-                        if int(file_date[-4:]) >= 2000:
+                        if int(file_date[-4:]) >= SEARCH_YEAR:
                             urlretrieve(act_link, outp_path + '/' + file_id + '.pdf')
                             outp.writerow([file_id, file_date])
 
